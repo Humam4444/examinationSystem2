@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="welcome-header">
+                <div class="welcome-icon">
+                    <i class="fas {% if current_user.role == 'teacher' %}fa-chalkboard-teacher{% else %}fa-user-graduate{% endif %}"></i>
+                </div>
+                <h1>مرحباً، {{ current_user.username }}</h1>
+                <p class="lead">
+                    {% if current_user.role == 'teacher' %}
+                    مرحباً بك في لوحة تحكم المعلم. يمكنك إدارة الاختبارات ومتابعة نتائج الطلاب.
+                    {% else %}
+                    مرحباً بك في نظام الامتحانات. يمكنك الآن البدء في حل الاختبارات المتاحة.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.role == 'teacher' %}
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ exams|length }}</h3>
+                    <p>اختبار</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ total_students|length }}</h3>
+                    <p>طالب</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ total_results|length }}</h3>
+                    <p>نتيجة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="action-card">
+                <a href="{{ url_for('create_exam') }}" class="create-exam-btn">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>إنشاء اختبار جديد</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if current_user.role == 'student' %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-bell"></i> الإشعارات</h5>
+                </div>
+                <div class="card-body">
+                    {% set has_notifications = false %}
+                    {% for result in current_user.exam_results %}
+                        {% if result.is_published %}
+                            {% set has_notifications = true %}
+                            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                <strong>نتيجة جديدة!</strong> تم نشر نتيجة امتحان "{{ result.exam.title }}"
+                                <a href="{{ url_for('view_result', exam_id=result.exam_id) }}" class="btn btn-primary btn-sm ms-2">
+                                    <i class="fas fa-eye"></i> عرض النتيجة
+                                </a>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    {% if not has_notifications %}
+                        <p class="text-muted mb-0">لا توجد إشعارات جديدة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="section-header">
+                <h2>
+                    <i class="fas fa-list me-2"></i>
+                    {% if current_user.role == 'teacher' %}
+                    الاختبارات المنشأة
+                    {% else %}
+                    الاختبارات المتاحة
+                    {% endif %}
+                </h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% if exams %}
+            {% for exam in exams %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="exam-card">
+                    <div class="exam-header">
+                        <div class="exam-title">
+                            <h3>{{ exam.title }}</h3>
+                            <span class="badge {% if exam.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                                {% if exam.is_active %}نشط{% else %}متوقف{% endif %}
+                            </span>
+                        </div>
+                        <div class="exam-icon">
+                            {% if 'math' in exam.title.lower() %}
+                            <i class="fas fa-square-root-alt"></i>
+                            {% elif 'science' in exam.title.lower() %}
+                            <i class="fas fa-atom"></i>
+                            {% elif 'english' in exam.title.lower() %}
+                            <i class="fas fa-language"></i>
+                            {% else %}
+                            <i class="fas fa-edit"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="exam-body">
+                        <p class="exam-description">{{ exam.description }}</p>
+                        
+                        <div class="exam-details">
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ exam.duration }} دقيقة</span>
+                            </div>
+                            {% if current_user.role == 'teacher' %}
+                            <div class="detail-item">
+                                <i class="fas fa-users"></i>
+                                <span>{{ exam.students|length }} طالب</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="exam-footer">
+                        {% if current_user.role == 'teacher' %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <button class="btn btn-sm btn-primary" onclick="editExam({{ exam.id }})">
+                                <i class="fas fa-edit"></i> تعديل
+                            </button>
+                            <button class="btn btn-sm btn-info" onclick="window.location.href='/grade_exam/{{ exam.id }}'">
+                                <i class="fas fa-check"></i> تصحيح
+                            </button>
+                            <button class="btn btn-sm {% if exam.is_active %}btn-danger{% else %}btn-success{% endif %}" 
+                                    onclick="toggleExam({{ exam.id }}, this)">
+                                <i class="fas {% if exam.is_active %}fa-times{% else %}fa-check{% endif %}"></i>
+                                {% if exam.is_active %}إيقاف{% else %}تفعيل{% endif %}
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="student-actions">
+                            {% if exam.is_active %}
+                            <a href="{{ url_for('take_exam', exam_id=exam.id) }}" class="action-btn start-btn">
+                                <i class="fas fa-pencil-alt"></i>
+                                <span>بدء الامتحان</span>
+                            </a>
+                            {% else %}
+                            <button class="action-btn disabled-btn" disabled>
+                                <i class="fas fa-lock"></i>
+                                <span>الامتحان مغلق</span>
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas {% if current_user.role == 'teacher' %}fa-clipboard-list{% else %}fa-book-reader{% endif %}"></i>
+                </div>
+                <h3>
+                    {% if current_user.role == 'teacher' %}
+                    لا يوجد اختبارات منشأة
+                    {% else %}
+                    لا يوجد اختبارات متاحة حالياً
+                    {% endif %}
+                </h3>
+                <p>
+                    {% if current_user.role == 'teacher' %}
+                    قم بإنشاء اختبار جديد للبدء في إدارة الاختبارات
+                    {% else %}
+                    سيتم إضافة اختبارات جديدة قريباً
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleExam(examId, button) {
+    fetch(`/toggle_exam/${examId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: !button.classList.contains('btn-danger') })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء تحديث حالة الاختبار');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء تحديث حالة الاختبار');
+    });
+}
+</script>
+{% endblock %}

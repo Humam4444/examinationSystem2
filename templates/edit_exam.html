@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">تعديل الاختبار</h1>
+    
+    <form method="POST" class="needs-validation" novalidate>
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">معلومات الاختبار</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="title" class="form-label">عنوان الاختبار</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ exam.title }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">وصف الاختبار</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" required>{{ exam.description }}</textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="duration" class="form-label">مدة الاختبار (بالدقائق)</label>
+                    <input type="number" class="form-control" id="duration" name="duration" value="{{ exam.duration }}" required min="1">
+                </div>
+            </div>
+        </div>
+
+        <div id="questions-container">
+            {% for question in exam.questions %}
+            <div class="card mb-4 question-card" data-question-index="{{ loop.index0 }}">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">السؤال {{ loop.index }}</h5>
+                    <button type="button" class="btn btn-danger btn-sm remove-question">
+                        <i class="fas fa-trash"></i> حذف السؤال
+                    </button>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" name="question_id[]" value="{{ question.id }}">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">نص السؤال</label>
+                            <textarea class="form-control" name="question_text[]" rows="2" required>{{ question.question_text }}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">نوع السؤال</label>
+                                <select class="form-select" name="question_type[]" onchange="toggleOptions(this)">
+                                    <option value="multiple_choice" {% if question.question_type == 'multiple_choice' %}selected{% endif %}>اختيار من متعدد</option>
+                                    <option value="true_false" {% if question.question_type == 'true_false' %}selected{% endif %}>صح/خطأ</option>
+                                    <option value="essay" {% if question.question_type == 'essay' %}selected{% endif %}>مقالي</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">الدرجة</label>
+                                <input type="number" class="form-control" name="points[]" min="1" value="{{ question.points }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">مستوى الصعوبة</label>
+                                <select class="form-select" name="difficulty_level[]" required>
+                                    <option value="easy" {% if question.difficulty_level == 'easy' %}selected{% endif %}>سهل</option>
+                                    <option value="medium" {% if question.difficulty_level == 'medium' %}selected{% endif %}>متوسط</option>
+                                    <option value="hard" {% if question.difficulty_level == 'hard' %}selected{% endif %}>صعب</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">الموضوع/التصنيف</label>
+                                <input type="text" class="form-control" name="subject_tags[]" value="{{ question.subject_tags }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="options-section" {% if question.question_type != 'multiple_choice' %}style="display: none;"{% endif %}>
+                        <div class="mb-3">
+                            <label class="form-label">الخيارات (افصل بين الخيارات بفاصلة)</label>
+                            <input type="text" class="form-control" name="options[]" value="{{ question.options|join(',') if question.options else '' }}" placeholder="الخيار 1, الخيار 2, الخيار 3, الخيار 4">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">الإجابة الصحيحة</label>
+                            <input type="text" class="form-control" name="correct_answer[]" value="{{ question.correct_answer }}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mb-4">
+            <button type="button" class="btn btn-success" onclick="addQuestion()">
+                <i class="fas fa-plus"></i> إضافة سؤال
+            </button>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save"></i> حفظ التعديلات
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+            </a>
+        </div>
+    </form>
+</div>
+
+<template id="question-template">
+    <div class="question-item card mb-4">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">سؤال جديد</h5>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <input type="hidden" name="from_bank[]" value="false">
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label class="form-label">نص السؤال</label>
+                    <textarea class="form-control" name="question_text[]" rows="2" required></textarea>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">نوع السؤال</label>
+                        <select class="form-select" name="question_type[]" onchange="toggleOptions(this)">
+                            <option value="multiple_choice">اختيار من متعدد</option>
+                            <option value="true_false">صح/خطأ</option>
+                            <option value="essay">مقالي</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">الدرجة</label>
+                        <input type="number" class="form-control" name="points[]" min="1" value="1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">مستوى الصعوبة</label>
+                        <select class="form-select" name="difficulty_level[]" required>
+                            <option value="easy">سهل</option>
+                            <option value="medium" selected>متوسط</option>
+                            <option value="hard">صعب</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">الموضوع/التصنيف</label>
+                        <input type="text" class="form-control" name="subject_tags[]" placeholder="مثال: رياضيات, جبر" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="options-section">
+                <div class="mb-3">
+                    <label class="form-label">الخيارات (افصل بين الخيارات بفاصلة)</label>
+                    <input type="text" class="form-control" name="options[]" placeholder="الخيار 1, الخيار 2, الخيار 3, الخيار 4">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">الإجابة الصحيحة</label>
+                    <input type="text" class="form-control" name="correct_answer[]" required>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style>
+.progress {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    border-bottom: none;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.remove-question {
+    transition: all 0.3s ease;
+}
+
+.remove-question:hover {
+    transform: scale(1.05);
+}
+</style>
+
+<script>
+function addQuestion() {
+    const template = document.getElementById('question-template');
+    const container = document.getElementById('questions-container');
+    const clone = template.content.cloneNode(true);
+    container.appendChild(clone);
+    
+    // Show/hide options based on question type
+    const select = container.lastElementChild.querySelector('select[name="question_type[]"]');
+    toggleOptions(select);
+}
+
+function removeQuestion(button) {
+    const questionItem = button.closest('.question-item');
+    questionItem.remove();
+}
+
+function toggleOptions(select) {
+    const questionItem = select.closest('.question-item');
+    const optionsSection = questionItem.querySelector('.options-section');
+    
+    if (select.value === 'multiple_choice') {
+        optionsSection.style.display = 'block';
+    } else {
+        optionsSection.style.display = 'none';
+    }
+}
+
+// Initialize options visibility for existing questions
+document.addEventListener('DOMContentLoaded', function() {
+    const questionTypes = document.querySelectorAll('select[name="question_type[]"]');
+    questionTypes.forEach(select => {
+        toggleOptions(select);
+    });
+});
+</script>
+{% endblock %}
