@@ -1,52 +1,97 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-center mb-4">تعديل الاختبار</h1>
+<div class="container my-5 animate__animated animate__fadeIn">
+    <div class="section-header text-center mb-5">
+        <h1 class="gradient-text"><i class="fas fa-edit me-2"></i>تعديل الاختبار</h1>
+        <p class="text-muted mt-3">قم بتعديل معلومات الاختبار وأسئلته من النموذج أدناه</p>
+    </div>
     
-    <form method="POST" class="needs-validation" novalidate>
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+    <form method="POST" class="needs-validation custom-form" novalidate>
+        <!-- Exam Information Card -->
+        <div class="card glass-card mb-5 border-gradient">
+            <div class="card-header bg-gradient d-flex align-items-center">
+                <i class="fas fa-info-circle me-2 fs-4"></i>
                 <h5 class="mb-0">معلومات الاختبار</h5>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <label for="title" class="form-label">عنوان الاختبار</label>
-                    <input type="text" class="form-control" id="title" name="title" value="{{ exam.title }}" required>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="description" class="form-label">وصف الاختبار</label>
-                    <textarea class="form-control" id="description" name="description" rows="3" required>{{ exam.description }}</textarea>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="duration" class="form-label">مدة الاختبار (بالدقائق)</label>
-                    <input type="number" class="form-control" id="duration" name="duration" value="{{ exam.duration }}" required min="1">
+                <div class="row">
+                    <div class="col-md-12 mb-4">
+                        <label for="title" class="form-label fw-bold">
+                            <i class="fas fa-heading me-1"></i> عنوان الاختبار
+                        </label>
+                        <input type="text" class="form-control form-control-lg" 
+                               id="title" name="title" value="{{ exam.title }}" required>
+                    </div>
+                    
+                    <div class="col-md-12 mb-4">
+                        <label for="description" class="form-label fw-bold">
+                            <i class="fas fa-align-left me-1"></i> وصف الاختبار
+                        </label>
+                        <textarea class="form-control" id="description" name="description" 
+                                  rows="3" required>{{ exam.description }}</textarea>
+                        <div class="form-text text-muted">أضف وصفاً توضيحياً قصيراً للاختبار</div>
+                    </div>
+                    
+                    <div class="col-md-12 mb-3">
+                        <label for="duration" class="form-label fw-bold">
+                            <i class="fas fa-clock me-1"></i> مدة الاختبار (بالدقائق)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="duration" 
+                                   name="duration" value="{{ exam.duration }}" required min="1">
+                            <span class="input-group-text">دقيقة</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Questions Section -->
+        <div class="section-header mb-4">
+            <h2 class="d-flex align-items-center">
+                <i class="fas fa-question-circle me-2"></i>
+                <span>الأسئلة</span>
+                <span class="badge bg-primary rounded-pill ms-2 questions-counter">
+                    {{ exam.questions|length }}
+                </span>
+            </h2>
+        </div>
+
         <div id="questions-container">
             {% for question in exam.questions %}
-            <div class="card mb-4 question-card" data-question-index="{{ loop.index0 }}">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">السؤال {{ loop.index }}</h5>
-                    <button type="button" class="btn btn-danger btn-sm remove-question">
-                        <i class="fas fa-trash"></i> حذف السؤال
-                    </button>
+            <div class="card glass-card mb-4 question-card animate__animated animate__fadeInUp" data-question-index="{{ loop.index0 }}">
+                <div class="card-header bg-gradient d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>
+                        <span class="question-number">السؤال {{ loop.index }}</span>
+                    </h5>
+                    <div class="actions">
+                        <button type="button" class="btn btn-danger btn-sm remove-question" title="حذف السؤال">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <input type="hidden" name="question_id[]" value="{{ question.id }}">
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label class="form-label">نص السؤال</label>
-                            <textarea class="form-control" name="question_text[]" rows="2" required>{{ question.question_text }}</textarea>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-quote-right me-1"></i> نص السؤال
+                                </label>
+                                <textarea class="form-control question-text" name="question_text[]" rows="3" required>{{ question.question_text }}</textarea>
+                                <div class="form-text text-muted">يمكنك استخدام LaTeX لكتابة المعادلات الرياضية مثل \(x^2 + y^2 = z^2\)</div>
+                            </div>
                         </div>
+                        
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label class="form-label">نوع السؤال</label>
-                                <select class="form-select" name="question_type[]" onchange="toggleOptions(this)">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-list-alt me-1"></i> نوع السؤال
+                                </label>
+                                <select class="form-select question-type" name="question_type[]" onchange="toggleOptions(this)">
                                     <option value="multiple_choice" {% if question.question_type == 'multiple_choice' %}selected{% endif %}>اختيار من متعدد</option>
                                     <option value="true_false" {% if question.question_type == 'true_false' %}selected{% endif %}>صح/خطأ</option>
                                     <option value="essay" {% if question.question_type == 'essay' %}selected{% endif %}>مقالي</option>
@@ -54,12 +99,16 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label">الدرجة</label>
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-star me-1"></i> الدرجة
+                                </label>
                                 <input type="number" class="form-control" name="points[]" min="1" value="{{ question.points }}" required>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">مستوى الصعوبة</label>
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-chart-bar me-1"></i> مستوى الصعوبة
+                                </label>
                                 <select class="form-select" name="difficulty_level[]" required>
                                     <option value="easy" {% if question.difficulty_level == 'easy' %}selected{% endif %}>سهل</option>
                                     <option value="medium" {% if question.difficulty_level == 'medium' %}selected{% endif %}>متوسط</option>
@@ -68,21 +117,34 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">الموضوع/التصنيف</label>
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-tags me-1"></i> الموضوع/التصنيف
+                                </label>
                                 <input type="text" class="form-control" name="subject_tags[]" value="{{ question.subject_tags }}" required>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="options-section" {% if question.question_type != 'multiple_choice' %}style="display: none;"{% endif %}>
-                        <div class="mb-3">
-                            <label class="form-label">الخيارات (افصل بين الخيارات بفاصلة)</label>
-                            <input type="text" class="form-control" name="options[]" value="{{ question.options|join(',') if question.options else '' }}" placeholder="الخيار 1, الخيار 2, الخيار 3, الخيار 4">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">الإجابة الصحيحة</label>
-                            <input type="text" class="form-control" name="correct_answer[]" value="{{ question.correct_answer }}" required>
+                    <div class="options-section mt-3" {% if question.question_type != 'multiple_choice' %}style="display: none;"{% endif %}>
+                        <div class="card inner-card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-list-ol me-1"></i> الخيارات
+                                    </label>
+                                    <input type="text" class="form-control" name="options[]" 
+                                           value="{{ question.options|join(',') if question.options else '' }}" 
+                                           placeholder="الخيار 1, الخيار 2, الخيار 3, الخيار 4">
+                                    <div class="form-text text-muted">افصل بين الخيارات باستخدام الفاصلة (,)</div>
+                                </div>
+                                
+                                <div class="mb-0">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-check-circle me-1"></i> الإجابة الصحيحة
+                                    </label>
+                                    <input type="text" class="form-control" name="correct_answer[]" value="{{ question.correct_answer }}" required>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -90,45 +152,57 @@
             {% endfor %}
         </div>
 
-        <div class="text-center mb-4">
-            <button type="button" class="btn btn-success" onclick="addQuestion()">
-                <i class="fas fa-plus"></i> إضافة سؤال
+        <div class="text-center mb-5">
+            <button type="button" class="btn btn-success btn-lg add-question-btn" onclick="addQuestion()">
+                <i class="fas fa-plus-circle me-2"></i> إضافة سؤال جديد
             </button>
         </div>
 
-        <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save"></i> حفظ التعديلات
+        <div class="action-buttons">
+            <button type="submit" class="btn btn-primary btn-lg submit-btn">
+                <i class="fas fa-save me-2"></i> حفظ التعديلات
             </button>
             <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+                <i class="fas fa-arrow-right me-2"></i> العودة للوحة التحكم
             </a>
         </div>
     </form>
 </div>
 
+<!-- Question Template -->
 <template id="question-template">
-    <div class="question-item card mb-4">
-        <div class="card-header bg-light">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">سؤال جديد</h5>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
-                    <i class="fas fa-trash"></i>
+    <div class="card glass-card mb-4 question-card animate__animated animate__fadeInUp">
+        <div class="card-header bg-gradient d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-question-circle me-2"></i>
+                <span class="question-number">سؤال جديد</span>
+            </h5>
+            <div class="actions">
+                <button type="button" class="btn btn-danger btn-sm remove-question" onclick="removeQuestion(this)" title="حذف السؤال">
+                    <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
         </div>
         <div class="card-body">
-            <input type="hidden" name="from_bank[]" value="false">
-            <div class="row">
-                <div class="col-md-8 mb-3">
-                    <label class="form-label">نص السؤال</label>
-                    <textarea class="form-control" name="question_text[]" rows="2" required></textarea>
+            <input type="hidden" name="question_id[]" value="">
+            
+            <div class="row g-4">
+                <div class="col-md-8">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-quote-right me-1"></i> نص السؤال
+                        </label>
+                        <textarea class="form-control question-text" name="question_text[]" rows="3" required></textarea>
+                        <div class="form-text text-muted">يمكنك استخدام LaTeX لكتابة المعادلات الرياضية مثل \(x^2 + y^2 = z^2\)</div>
+                    </div>
                 </div>
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label class="form-label">نوع السؤال</label>
-                        <select class="form-select" name="question_type[]" onchange="toggleOptions(this)">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-list-alt me-1"></i> نوع السؤال
+                        </label>
+                        <select class="form-select question-type" name="question_type[]" onchange="toggleOptions(this)">
                             <option value="multiple_choice">اختيار من متعدد</option>
                             <option value="true_false">صح/خطأ</option>
                             <option value="essay">مقالي</option>
@@ -136,12 +210,16 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">الدرجة</label>
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-star me-1"></i> الدرجة
+                        </label>
                         <input type="number" class="form-control" name="points[]" min="1" value="1" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">مستوى الصعوبة</label>
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-chart-bar me-1"></i> مستوى الصعوبة
+                        </label>
                         <select class="form-select" name="difficulty_level[]" required>
                             <option value="easy">سهل</option>
                             <option value="medium" selected>متوسط</option>
@@ -150,83 +228,252 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">الموضوع/التصنيف</label>
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-tags me-1"></i> الموضوع/التصنيف
+                        </label>
                         <input type="text" class="form-control" name="subject_tags[]" placeholder="مثال: رياضيات, جبر" required>
                     </div>
                 </div>
             </div>
             
-            <div class="options-section">
-                <div class="mb-3">
-                    <label class="form-label">الخيارات (افصل بين الخيارات بفاصلة)</label>
-                    <input type="text" class="form-control" name="options[]" placeholder="الخيار 1, الخيار 2, الخيار 3, الخيار 4">
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">الإجابة الصحيحة</label>
-                    <input type="text" class="form-control" name="correct_answer[]" required>
+            <div class="options-section mt-3">
+                <div class="card inner-card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-list-ol me-1"></i> الخيارات
+                            </label>
+                            <input type="text" class="form-control" name="options[]" placeholder="الخيار 1, الخيار 2, الخيار 3, الخيار 4">
+                            <div class="form-text text-muted">افصل بين الخيارات باستخدام الفاصلة (,)</div>
+                        </div>
+                        
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-check-circle me-1"></i> الإجابة الصحيحة
+                            </label>
+                            <input type="text" class="form-control" name="correct_answer[]" required>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </template>
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <style>
-.progress {
-    background-color: #f8f9fa;
-    border-radius: 10px;
-}
-
-.progress-bar {
-    border-radius: 10px;
-    transition: width 0.3s ease;
-}
-
-.card {
-    border: none;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    margin-bottom: 1rem;
-}
-
-.card-header {
-    border-bottom: none;
-}
-
-.btn-lg {
-    padding: 0.75rem 1.5rem;
-    font-size: 1.1rem;
-}
-
-.remove-question {
-    transition: all 0.3s ease;
-}
-
-.remove-question:hover {
-    transform: scale(1.05);
-}
+    /* Custom styles for edit exam page */
+    .section-header h1, .section-header h2 {
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .gradient-text {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2.5rem;
+    }
+    
+    .glass-card {
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all var(--transition-normal);
+    }
+    
+    .card-header {
+        border-bottom: none;
+        padding: 1.2rem 1.5rem;
+    }
+    
+    .bg-gradient {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .border-gradient {
+        position: relative;
+    }
+    
+    .border-gradient:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .inner-card {
+        background-color: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+    
+    .form-control, .form-select, .input-group-text {
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        padding: 0.75rem 1rem;
+    }
+    
+    .form-control-lg {
+        font-size: 1.1rem;
+    }
+    
+    .question-card {
+        position: relative;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        animation-duration: 0.5s;
+    }
+    
+    .question-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .question-number {
+        font-weight: 600;
+    }
+    
+    .add-question-btn {
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #10b981, #059669);
+        border: none;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25);
+        transition: all 0.3s ease;
+    }
+    
+    .add-question-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(16, 185, 129, 0.35);
+        background: linear-gradient(135deg, #059669, #047857);
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .submit-btn {
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25);
+        transition: all 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(79, 70, 229, 0.35);
+        background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+    }
+    
+    .btn-secondary {
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        background: var(--input-bg);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: var(--hover-bg);
+    }
+    
+    .questions-counter {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .question-text {
+        min-height: 100px;
+    }
+    
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translate3d(0, 30px, 0);
+        }
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
 </style>
+{% endblock %}
 
+{% block scripts %}
 <script>
 function addQuestion() {
-    const template = document.getElementById('question-template');
     const container = document.getElementById('questions-container');
+    const template = document.getElementById('question-template');
     const clone = template.content.cloneNode(true);
+    const questionCards = container.querySelectorAll('.question-card');
+    
+    // Update question number
+    const questionNumber = questionCards.length + 1;
+    clone.querySelector('.question-number').textContent = `السؤال ${questionNumber}`;
+    
+    // Add to container with animation
     container.appendChild(clone);
     
-    // Show/hide options based on question type
-    const select = container.lastElementChild.querySelector('select[name="question_type[]"]');
-    toggleOptions(select);
+    // Update questions counter
+    updateQuestionsCounter();
+    
+    // Initialize LaTeX rendering for the new question
+    setTimeout(() => {
+        renderMathInElement(document.body, {
+            delimiters: [
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ]
+        });
+    }, 100);
 }
 
 function removeQuestion(button) {
-    const questionItem = button.closest('.question-item');
-    questionItem.remove();
+    const questionCard = button.closest('.question-card');
+    questionCard.classList.remove('animate__fadeInUp');
+    questionCard.classList.add('animate__fadeOutDown');
+    
+    setTimeout(() => {
+        questionCard.remove();
+        // Renumber remaining questions
+        renumberQuestions();
+        // Update questions counter
+        updateQuestionsCounter();
+    }, 500);
+}
+
+function renumberQuestions() {
+    const questionCards = document.querySelectorAll('.question-card');
+    questionCards.forEach((card, index) => {
+        card.querySelector('.question-number').textContent = `السؤال ${index + 1}`;
+    });
+}
+
+function updateQuestionsCounter() {
+    const count = document.querySelectorAll('.question-card').length;
+    document.querySelector('.questions-counter').textContent = count;
 }
 
 function toggleOptions(select) {
-    const questionItem = select.closest('.question-item');
-    const optionsSection = questionItem.querySelector('.options-section');
-    
+    const optionsSection = select.closest('.card-body').querySelector('.options-section');
     if (select.value === 'multiple_choice') {
         optionsSection.style.display = 'block';
     } else {
@@ -234,12 +481,25 @@ function toggleOptions(select) {
     }
 }
 
-// Initialize options visibility for existing questions
+// Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    const questionTypes = document.querySelectorAll('select[name="question_type[]"]');
+    // Initialize options visibility
+    const questionTypes = document.querySelectorAll('.question-type');
     questionTypes.forEach(select => {
         toggleOptions(select);
     });
+    
+    // Update questions counter
+    updateQuestionsCounter();
+    
+    // Initialize LaTeX rendering
+    renderMathInElement(document.body, {
+        delimiters: [
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ]
+    });
 });
 </script>
+{% endblock %}
 {% endblock %}
