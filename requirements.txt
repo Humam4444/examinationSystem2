@@ -9,3 +9,9 @@ Flask-Migrate==4.0.5
 bcrypt==4.1.2
 gunicorn==21.2.0
 psycopg2-binary==2.9.9
+Jinja2==3.1.2
+itsdangerous==2.1.2
+alembic==1.12.1
+SQLAlchemy==2.0.23
+WTForms==3.1.1
+MarkupSafe==2.1.3
