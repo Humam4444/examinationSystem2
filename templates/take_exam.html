@@ -1,0 +1,500 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exam.title }} | نظام الامتحانات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<style>
+    /* Custom styles for exam interface */
+    .section-header h1, .section-header h2 {
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .gradient-text {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2.5rem;
+    }
+    
+    /* Main container */
+    .exam-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        animation: fadeIn 0.8s ease;
+    }
+    
+    /* Header styling */
+    .exam-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 15px 15px 0 0;
+        padding: 2.5rem 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .exam-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent);
+        background-size: 4rem 4rem;
+        z-index: 0;
+        opacity: 0.15;
+    }
+    
+    .exam-title {
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+        position: relative;
+        z-index: 1;
+        font-size: 2.2rem;
+    }
+    
+    .exam-description {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Timer */
+    .exam-timer {
+        position: absolute;
+        top: 1.5rem;
+        right: 2rem;
+        background: rgba(30, 41, 59, 0.9);
+        color: white;
+        border-radius: 50px;
+        padding: 0.8rem 1.3rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .timer-warning {
+        background: rgba(234, 179, 8, 0.8);
+        color: white;
+        animation: pulse 1s infinite;
+    }
+    
+    .timer-danger {
+        background: rgba(239, 68, 68, 0.8);
+        color: white;
+        animation: pulse 0.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    
+    /* Exam body */
+    .exam-body {
+        background: rgba(30, 41, 59, 0.8);
+        border-radius: 0 0 15px 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Question cards */
+    .question-card {
+        margin-bottom: 2rem;
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        animation: fadeInUp 0.8s ease;
+    }
+    
+    .question-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.2rem 1.5rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .question-number {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: white;
+        display: flex;
+        align-items: center;
+    }
+    
+    .question-number i {
+        margin-left: 8px;
+    }
+    
+    .question-points {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--primary-color);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+    }
+    
+    .question-body {
+        padding: 1.8rem;
+    }
+    
+    .question-text {
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        margin-bottom: 1.8rem;
+        line-height: 1.6;
+    }
+    
+    /* Options styling */
+    .options-list {
+        margin-top: 1.5rem;
+    }
+    
+    .option-item {
+        display: block;
+        padding: 1rem 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+        cursor: pointer;
+        background-color: rgba(51, 65, 85, 0.3);
+    }
+    
+    .option-item:hover {
+        background-color: rgba(79, 70, 229, 0.1);
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .option-item.selected {
+        background-color: rgba(79, 70, 229, 0.15);
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+    }
+    
+    .option-radio {
+        margin-left: 1rem;
+    }
+    
+    .option-text {
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+    
+    /* Essay input */
+    .essay-textarea {
+        width: 100%;
+        padding: 1.2rem;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        min-height: 180px;
+        resize: vertical;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+    
+    .essay-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+    
+    /* Submit button */
+    .exam-submit {
+        margin-top: 3rem;
+        text-align: center;
+    }
+    
+    .submit-btn {
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+    }
+    
+    .submit-btn:active {
+        transform: translateY(-1px);
+    }
+    
+    /* Unanswered styles */
+    .unanswered {
+        border: 2px solid var(--danger-color) !important;
+        animation: shake 0.8s ease;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translate3d(0, 30px, 0);
+        }
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="exam-container">
+    <div class="exam-header">
+        <h1 class="exam-title">{{ exam.title }}</h1>
+        <p class="exam-description">{{ exam.description }}</p>
+        <div id="exam-timer" class="exam-timer">
+            <i class="fas fa-clock"></i>
+            <span id="timer-display">--:--</span>
+        </div>
+    </div>
+    
+    <div class="exam-body">
+        <form id="exam-form" action="{{ url_for('submit_exam', exam_id=exam.id) }}" method="POST">
+            {% for question in exam.questions %}
+            <div class="question-card animate__animated animate__fadeInUp" id="question-{{ question.id }}" data-delay="{{ loop.index0 * 0.1 }}">
+                <div class="question-header">
+                    <div class="question-number"><i class="fas fa-question-circle"></i> السؤال {{ loop.index }}</div>
+                    <div class="question-points">{{ question.points }} نقطة</div>
+                </div>
+                <div class="question-body">
+                    <div class="question-text" dir="auto">{{ question.question_text | safe }}</div>
+                    
+                    {% if question.question_type == 'multiple_choice' %}
+                        <div class="options-list" dir="rtl">
+                            {% for option in question.options %}
+                            <label class="option-item" for="q{{ question.id }}_opt{{ loop.index0 }}">
+                                <input type="radio" 
+                                       id="q{{ question.id }}_opt{{ loop.index0 }}" 
+                                       name="answer_{{ question.id }}" 
+                                       value="{{ loop.index0 }}"
+                                       class="option-radio">
+                                <span class="option-text">{{ option | safe }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    {% elif question.question_type == 'true_false' %}
+                        <div class="options-list" dir="rtl">
+                            <label class="option-item" for="q{{ question.id }}_true">
+                                <input type="radio" 
+                                       id="q{{ question.id }}_true" 
+                                       name="answer_{{ question.id }}" 
+                                       value="true"
+                                       class="option-radio">
+                                <span class="option-text">صحيح</span>
+                            </label>
+                            <label class="option-item" for="q{{ question.id }}_false">
+                                <input type="radio" 
+                                       id="q{{ question.id }}_false" 
+                                       name="answer_{{ question.id }}" 
+                                       value="false"
+                                       class="option-radio">
+                                <span class="option-text">خطأ</span>
+                            </label>
+                        </div>
+                    {% elif question.question_type == 'essay' %}
+                        <textarea class="essay-textarea" 
+                                  name="answer_{{ question.id }}" 
+                                  placeholder="اكتب إجابتك هنا..." 
+                                  dir="rtl"></textarea>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="exam-submit">
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane me-2"></i> تسليم الامتحان
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply animation delay from data attribute
+        document.querySelectorAll('.question-card').forEach(card => {
+            const delay = card.getAttribute('data-delay');
+            if (delay) {
+                card.style.animationDelay = delay + 's';
+            }
+        });
+        
+        // Render math formulas with KaTeX
+        renderMath();
+        
+        // Timer setup
+        const durationMinutes = parseInt('{{ exam.duration }}');
+        const endTime = new Date().getTime() + (durationMinutes * 60 * 1000);
+        
+        // Update the timer every second
+        const timerInterval = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = endTime - now;
+            
+            // Time calculations for minutes and seconds
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // Display the timer
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update timer color based on remaining time
+            const timerElement = document.getElementById('exam-timer');
+            if (distance < 300000) { // Less than 5 minutes
+                timerElement.classList.remove('timer-warning');
+                timerElement.classList.add('timer-danger');
+            } else if (distance < 600000) { // Less than 10 minutes
+                timerElement.classList.add('timer-warning');
+            }
+            
+            // If the countdown is over, submit the exam
+            if (distance < 0) {
+                clearInterval(timerInterval);
+                timerDisplay.textContent = '00:00';
+                alert('انتهى وقت الامتحان! سيتم إرسال إجاباتك تلقائياً.');
+                document.getElementById('exam-form').submit();
+            }
+        }, 1000);
+
+        // Function to render math formulas using KaTeX
+        function renderMath() {
+            // Render formulas in question text
+            document.querySelectorAll('.question-text, .option-text').forEach(el => {
+                renderMathInElement(el, {
+                    delimiters: [
+                        {left: "$$", right: "$$", display: true},
+                        {left: "$", right: "$", display: false},
+                        {left: "\\(", right: "\\)", display: false},
+                        {left: "\\[", right: "\\]", display: true}
+                    ],
+                    throwOnError: false,
+                    trust: true,
+                    strict: false
+                });
+            });
+        }
+
+        // Option selection visual feedback
+        const optionLabels = document.querySelectorAll('.option-item');
+        optionLabels.forEach(label => {
+            const input = label.querySelector('input[type="radio"]');
+            input.addEventListener('change', function() {
+                // Remove selected class from all options in the same group
+                const name = this.name;
+                document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+                    radio.closest('.option-item').classList.remove('selected');
+                });
+                
+                // Add selected class to the chosen option
+                if (this.checked) {
+                    label.classList.add('selected');
+                }
+            });
+        });
+
+        // Form submission validation
+        const form = document.getElementById('exam-form');
+        form.addEventListener('submit', function(event) {
+            const questions = document.querySelectorAll('.question-card');
+            let allAnswered = true;
+            let unansweredQuestions = [];
+            
+            questions.forEach(function(question, index) {
+                const inputs = question.querySelectorAll('input[type="radio"], textarea');
+                let answered = false;
+                
+                inputs.forEach(input => {
+                    if (input.type === 'radio' && input.checked) {
+                        answered = true;
+                    } else if (input.type === 'textarea' && input.value.trim() !== '') {
+                        answered = true;
+                    }
+                });
+                
+                if (!answered) {
+                    allAnswered = false;
+                    unansweredQuestions.push(index + 1);
+                    question.classList.add('unanswered');
+                } else {
+                    question.classList.remove('unanswered');
+                }
+            });
+            
+            if (!allAnswered) {
+                event.preventDefault();
+                const questionsList = unansweredQuestions.join('، ');
+                alert(`الرجاء الإجابة على جميع الأسئلة. الأسئلة غير المجابة: ${questionsList}`);
+                
+                // Scroll to the first unanswered question
+                if (unansweredQuestions.length > 0) {
+                    const firstUnansweredQuestion = document.querySelector('.unanswered');
+                    if (firstUnansweredQuestion) {
+                        firstUnansweredQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
